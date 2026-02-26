@@ -1,0 +1,161 @@
+{% extends "tasks/base.html" %}
+
+{% block title %}TaskFlow — Your Tasks{% endblock %}
+
+{% block content %}
+<div class="board-header">
+    <div class="board-stats">
+        <h1 class="board-title">Your Board</h1>
+        <div class="stats-pills">
+            <span class="stat-pill">{{ total_count }} total</span>
+            <span class="stat-pill stat-done">{{ done_count }} done</span>
+        </div>
+    </div>
+</div>
+
+<div class="kanban-board" id="kanban-board">
+    <!-- Todo Column -->
+    <div class="kanban-column" id="col-todo">
+        <div class="column-header">
+            <div class="column-indicator indicator-todo"></div>
+            <h2 class="column-title">Todo</h2>
+            <span class="column-count">{{ todo_tasks|length }}</span>
+        </div>
+        <div class="column-body">
+            {% for task in todo_tasks %}
+            <div class="task-card card-enter" data-id="{{ task.id }}" id="task-{{ task.id }}">
+                <div class="card-top-row">
+                    <span class="priority-badge priority-{{ task.priority }}">{{ task.get_priority_display }}</span>
+                    {% if task.category %}
+                    <span class="category-tag">{{ task.category }}</span>
+                    {% endif %}
+                </div>
+                <h3 class="card-title">{{ task.title }}</h3>
+                {% if task.description %}
+                <p class="card-desc">{{ task.description|truncatewords:15 }}</p>
+                {% endif %}
+                <div class="card-footer">
+                    {% if task.due_date %}
+                    <span class="due-date {% if task.is_overdue %}overdue{% endif %}">
+                        📅 {{ task.due_date|date:"M d" }}
+                    </span>
+                    {% endif %}
+                    <div class="card-actions">
+                        <form method="post" action="{% url 'task_toggle_status' task.pk %}" class="inline-form">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-icon-action" title="Move forward"
+                                id="toggle-{{ task.id }}">▶</button>
+                        </form>
+                        <a href="{% url 'task_edit' task.pk %}" class="btn-icon-action" title="Edit"
+                            id="edit-{{ task.id }}">✏️</a>
+                        <a href="{% url 'task_delete' task.pk %}" class="btn-icon-action btn-danger" title="Delete"
+                            id="delete-{{ task.id }}">🗑️</a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <span class="empty-icon">🎯</span>
+                <p>No tasks yet</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- In Progress Column -->
+    <div class="kanban-column" id="col-in-progress">
+        <div class="column-header">
+            <div class="column-indicator indicator-progress"></div>
+            <h2 class="column-title">In Progress</h2>
+            <span class="column-count">{{ in_progress_tasks|length }}</span>
+        </div>
+        <div class="column-body">
+            {% for task in in_progress_tasks %}
+            <div class="task-card card-enter" data-id="{{ task.id }}" id="task-{{ task.id }}">
+                <div class="card-top-row">
+                    <span class="priority-badge priority-{{ task.priority }}">{{ task.get_priority_display }}</span>
+                    {% if task.category %}
+                    <span class="category-tag">{{ task.category }}</span>
+                    {% endif %}
+                </div>
+                <h3 class="card-title">{{ task.title }}</h3>
+                {% if task.description %}
+                <p class="card-desc">{{ task.description|truncatewords:15 }}</p>
+                {% endif %}
+                <div class="card-footer">
+                    {% if task.due_date %}
+                    <span class="due-date {% if task.is_overdue %}overdue{% endif %}">
+                        📅 {{ task.due_date|date:"M d" }}
+                    </span>
+                    {% endif %}
+                    <div class="card-actions">
+                        <form method="post" action="{% url 'task_toggle_status' task.pk %}" class="inline-form">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-icon-action" title="Move forward"
+                                id="toggle-{{ task.id }}">▶</button>
+                        </form>
+                        <a href="{% url 'task_edit' task.pk %}" class="btn-icon-action" title="Edit"
+                            id="edit-{{ task.id }}">✏️</a>
+                        <a href="{% url 'task_delete' task.pk %}" class="btn-icon-action btn-danger" title="Delete"
+                            id="delete-{{ task.id }}">🗑️</a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <span class="empty-icon">🚀</span>
+                <p>Nothing in progress</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Done Column -->
+    <div class="kanban-column" id="col-done">
+        <div class="column-header">
+            <div class="column-indicator indicator-done"></div>
+            <h2 class="column-title">Done</h2>
+            <span class="column-count">{{ done_tasks|length }}</span>
+        </div>
+        <div class="column-body">
+            {% for task in done_tasks %}
+            <div class="task-card card-enter card-done" data-id="{{ task.id }}" id="task-{{ task.id }}">
+                <div class="card-top-row">
+                    <span class="priority-badge priority-{{ task.priority }}">{{ task.get_priority_display }}</span>
+                    {% if task.category %}
+                    <span class="category-tag">{{ task.category }}</span>
+                    {% endif %}
+                </div>
+                <h3 class="card-title">{{ task.title }}</h3>
+                {% if task.description %}
+                <p class="card-desc">{{ task.description|truncatewords:15 }}</p>
+                {% endif %}
+                <div class="card-footer">
+                    {% if task.due_date %}
+                    <span class="due-date">
+                        📅 {{ task.due_date|date:"M d" }}
+                    </span>
+                    {% endif %}
+                    <div class="card-actions">
+                        <form method="post" action="{% url 'task_toggle_status' task.pk %}" class="inline-form">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-icon-action" title="Move back to Todo"
+                                id="toggle-{{ task.id }}">↩️</button>
+                        </form>
+                        <a href="{% url 'task_edit' task.pk %}" class="btn-icon-action" title="Edit"
+                            id="edit-{{ task.id }}">✏️</a>
+                        <a href="{% url 'task_delete' task.pk %}" class="btn-icon-action btn-danger" title="Delete"
+                            id="delete-{{ task.id }}">🗑️</a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <span class="empty-icon">✅</span>
+                <p>Complete some tasks!</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
